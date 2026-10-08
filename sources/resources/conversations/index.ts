@@ -167,8 +167,12 @@ const listConversations: ActionDefinition<ConversationsListInput> = {
         timezone = record["timezone"];
       }
       const next = record["next_cursor"];
-      cursor = typeof next === "string" && next.length > 0 ? next : undefined;
-      if (cursor === undefined || items.length === 0) {
+      // An empty page ends the walk even if it carries a cursor, and the
+      // combined response then reports no further page. Only the page cap
+      // below leaves a cursor in place, because only there is more history
+      // known to remain.
+      cursor = items.length > 0 && typeof next === "string" && next.length > 0 ? next : undefined;
+      if (cursor === undefined) {
         break;
       }
     }

@@ -208,8 +208,17 @@ describe("conversations command (registry-derived)", () => {
       calls += 1;
       return Response.json({ conversations: [], next_cursor: "again", timezone: "UTC" });
     });
-    await captureStdout(() => conversationsCommand.run(["list", "--all", "--json"], ctx));
+    const logs = await captureStdout(() => conversationsCommand.run(["list", "--all", "--json"], ctx));
     expect(calls).toBe(1);
+    expect(JSON.parse(logs.join("\n")).next_cursor).toBeNull();
+  });
+
+  it("prints no pagination footer when --all stops on an empty page", async () => {
+    const ctx = proxyContext(() =>
+      Response.json({ conversations: [], next_cursor: "again", timezone: "UTC" })
+    );
+    const logs = await captureStdout(() => conversationsCommand.run(["list", "--all"], ctx));
+    expect(logs.join("\n")).not.toContain("## Pagination");
   });
 
   it("renders an empty conversation list as markdown", async () => {
